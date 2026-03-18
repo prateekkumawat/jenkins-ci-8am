@@ -1,0 +1,19 @@
+pipeline {
+    agent {
+        lable 'agent1'
+    }
+
+    stages{
+        stage("AppCode Checkout"){
+            steps {
+                git branch:'main', url:' https://github.com/prateekkumawat/jenkins-ci-8am.git'
+            }
+        }
+
+        stage("code dump"){
+            steps {
+                sh 'sudo cp -rvf $WORKSPACE/src/  /var/www/html/'
+            }
+        }
+    }
+}
