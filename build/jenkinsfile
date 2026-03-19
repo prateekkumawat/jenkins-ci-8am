@@ -2,19 +2,36 @@ pipeline {
     agent {
         label 'agent1'
     }
-    tools {
-        git 'git' 
+    environment {
+        S3_BUCKET = 'amazon-static-hosting'
+        AWS_REGION = 'ap-south-2'
     }
     stages{
         stage("AppCode Checkout"){
             steps {
-                git branch:'main', url:' https://github.com/prateekkumawat/jenkins-ci-8am.git'
+                git branch:'s3-static-release', url:' https://github.com/prateekkumawat/jenkins-ci-8am.git'
             }
         }
 
-        stage("code dump"){
+        stage("Deploy Code to S3"){
             steps {
-                sh 'sudo cp -rvf $WORKSPACE/src/  /var/www/html/'
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding', 
+                    credentialsId: 'aws-account-creds'
+                ]]) {
+                    sh '''
+                    aws s3 sync $WORKSPACE/src/ s3://$S3_BUCKET --delete
+                    '''
+                }
+            }
+        }
+
+        post {
+            success {
+                echo "Deployment of s3 bucket success"
+            }
+            failure { 
+                echo "your job is failed"
             }
         }
     }
