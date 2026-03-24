@@ -5,11 +5,32 @@ pipeline {
     environment {
         S3_BUCKET = 'amazon-static-hosting'
         AWS_REGION = 'ap-south-2'
+        SCANNER_HOME = tool 'sonar-scanner'
     }
     stages{
         stage("AppCode Checkout"){
             steps {
                 git branch:'s3-static-release', url:' https://github.com/prateekkumawat/jenkins-ci-8am.git'
+            }
+        }
+        
+        stage("SonarAnalysis"){
+            steps{
+                dir('src/'){
+                    withSonarQubeEnv('sonar-server') {
+                      sh ''' $SCANNER_HOME/bin/sonar-scanner \
+                      -Dsonar.projectName=s3-static-website \
+                      -Dsonar.projectKey=s3-static-website '''
+                    }
+                }     
+            }
+        }   
+
+        stage("Sonar QualityGate"){
+            steps{
+                script {
+                  waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
+                }
             }
         }
 
