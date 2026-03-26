@@ -2,10 +2,12 @@ pipeline {
     agent {
         label 'agent1'
     }
+
     environment {
         NEXUSURL_HOST = "18.60.103.176:8081"
         SCANNER_HOME = tool 'sonar-scanner'
     }
+
     stages{
 
         stage{
@@ -106,4 +108,5 @@ pipeline {
             echo "your job is failed"
         }
     }
-}
+   }
+}    
