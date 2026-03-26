@@ -3,14 +3,20 @@ pipeline {
         label 'agent1'
     }
     environment {
-        S3_BUCKET = 'amazon-static-hosting'
-        AWS_REGION = 'ap-south-2'
+        NEXUSURL_HOST = "18.60.103.176:8081"
         SCANNER_HOME = tool 'sonar-scanner'
     }
     stages{
+
+        stage{
+            steps{
+              cleanWs()
+            }
+        }
+
         stage("AppCode Checkout"){
             steps {
-                git branch:'s3-static-release', url:' https://github.com/prateekkumawat/jenkins-ci-8am.git'
+                git branch:'python-app', url:' https://github.com/prateekkumawat/jenkins-ci-8am.git'
             }
         }
         
@@ -19,8 +25,8 @@ pipeline {
                 dir('src/'){
                     withSonarQubeEnv('sonar-server') {
                       sh ''' $SCANNER_HOME/bin/sonar-scanner \
-                      -Dsonar.projectName=s3-static-website \
-                      -Dsonar.projectKey=s3-static-website '''
+                      -Dsonar.projectName=python-app-project \
+                      -Dsonar.projectKey=python-app-project '''
                     }
                 }     
             }
@@ -33,20 +39,65 @@ pipeline {
                 }
             }
         }
-
-        stage("Deploy Code to S3"){
-            steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding', 
-                    credentialsId: 'aws-account-creds'
-                ]]) {
-                    sh '''
-                    aws s3 sync $WORKSPACE/src/ s3://$S3_BUCKET --delete
+ 
+        stage("PythonBuild"){
+            steps{
+                dir('app/'){
+                  sh '''
+                    #!/bin/bash
+                    set -e
+                    python3 -m venv venv
+                    venv/bin/pip install --upgrade pip setuptools wheel build
+                    venv/bin/python -m build
                     '''
-                }
+
+                    // Dynamically get package name and version
+                    script {
+                        env.PACKAGE_NAME = sh(script: "python3 setup.py --name", returnStdout: true).trim()
+                        env.PACKAGE_VERSION = sh(script: "python3 setup.py --version", returnStdout: true).trim()
+                        def distFiles = sh(script: "ls -1 dist/", returnStdout: true).trim().split("\n")
+                        
+                        // Pick the wheel and tar.gz files
+                        env.WHL_FILE = distFiles.find { it.endsWith(".whl") } ?: ""
+                        env.TAR_FILE = distFiles.find { it.endsWith(".tar.gz") } ?: ""
+                        
+                        echo "Detected Package: ${env.PACKAGE_NAME}, Version: ${env.PACKAGE_VERSION}"
+                        echo "Distfiles WHL: ${env.WHL_FILE}, TAR: ${env.TAR_FILE}"
+                    }
+                }    
             }
         }
-    }
+
+        stage("Artifacts Upload"){
+            steps{
+                dir('app/'){
+                    nexusArtifactUploader(
+                    nexusVersion: 'nexus3',
+                    protocol: 'http',
+                    nexusUrl: "${env.NEXUSURL_HOST}",
+                    groupId: 'hsit-app',
+                    version: "${env.PACKAGE_VERSION}",
+                    repository: 'hsit-common',       // use a PyPI-like repo in Nexus
+                    credentialsId: 'nexus-creds',
+                    artifacts: [
+                        [
+                            artifactId: "",
+                            classifier: '',
+                            file: "dist/${env.WHL_FILE}",
+                            type: 'whl'
+                        ],
+                        [
+                            artifactId: "",
+                            classifier: '',
+                            file: "dist/${env.TAR_FILE}",
+                            type: 'tar.gz'
+                        ]
+                    ]
+                   )
+                }        
+            }
+        }
+
     post {
         success {
             echo "Deployment of s3 bucket success"
