@@ -99,14 +99,5 @@ pipeline {
                 }        
             }
         }
-
-    post {
-        success {
-            echo "Deployment of s3 bucket success"
-        }
-        failure { 
-            echo "your job is failed"
-        }
-    }
    }
 }    
