@@ -85,7 +85,7 @@ pipeline {
                         [
                             artifactId: "",
                             classifier: '',
-                            file: 'dist/hsitapp-0.0.1.whl',
+                            file: 'dist/hsitapp-0.0.1-py3-none-any.whl',
                             type: 'whl'
                         ],
                         [
