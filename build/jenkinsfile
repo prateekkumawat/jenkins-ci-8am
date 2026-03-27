@@ -4,7 +4,7 @@ pipeline {
     }
 
     environment {
-        NEXUSURL_HOST = "18.60.103.176:8081"
+        NEXUSURL_HOST = "16.112.60.203:8081"
         SCANNER_HOME = tool 'sonar-scanner'
     }
 
@@ -77,7 +77,7 @@ pipeline {
                     nexusVersion: 'nexus3',
                     protocol: 'http',
                     nexusUrl: "${env.NEXUSURL_HOST}",
-                    groupId: 'hsit-app',
+                    groupId: 'hsitapp',
                     version: "${env.PACKAGE_VERSION}",
                     repository: 'hsit-common',       // use a PyPI-like repo in Nexus
                     credentialsId: 'nexus-creds',
