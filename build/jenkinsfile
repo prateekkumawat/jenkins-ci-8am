@@ -85,13 +85,13 @@ pipeline {
                         [
                             artifactId: "",
                             classifier: '',
-                            file: "dist/${env.WHL_FILE}",
+                            file: 'dist/hsitapp-0.0.1.whl',
                             type: 'whl'
                         ],
                         [
                             artifactId: "",
                             classifier: '',
-                            file: "dist/${env.TAR_FILE}",
+                            file: 'dist/hsitapp-0.0.1.tar.gz',
                             type: 'tar.gz'
                         ]
                     ]
