@@ -4,7 +4,7 @@ pipeline {
     }
 
     environment {
-        NEXUSURL_HOST = "16.112.60.203:8081"
+        NEXUSURL_HOST = "98.130.120.83:8081"
         SCANNER_HOME = tool 'sonar-scanner'
     }
 
