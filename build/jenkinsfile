@@ -6,6 +6,7 @@ pipeline {
     environment {
         NEXUSURL_HOST = "98.130.120.83:8081"
         SCANNER_HOME = tool 'sonar-scanner'
+        DOCKER_CREDS = credentials('docker-creds')
     }
 
     stages{
@@ -34,6 +35,19 @@ pipeline {
             }
         }   
 
+        stage("CreateImage"){
+            steps{
+                sh 'docker build -t prateekkumawat/pythonapp:v0.0.1 . '
+            }
+        }
+
+        stage("push Image"){
+          steps {
+               sh 'docker login -u $DOCKER_CREDS_USR -p $DOCKER_CREDS_PSW '
+               sh ' docker push prateekkumawat/pythonapp:v0.0.1'
+            }
+        }
+
         stage("Sonar QualityGate"){
             steps{
                 script {
@@ -59,6 +73,7 @@ pipeline {
                                 { "name": "🟢 **Status**", "value": "**SUCCESS ✅**" },
                                 { "name": "🔢 **Build**", "value": "**#${env.BUILD_NUMBER}**" },
                                 { "name": "🌿 **Branch / Tag**", "value": "**${env.GIT_BRANCH ?: params.GIT_REF}**" },
+                                { "name": "🟢 **image**", "value": "**prateekkumawat/pythonapp:v0.0.1" },
                                 { "name": "🔗 **Build URL**", "value": "[**Open Build**](${env.BUILD_URL})" }
                             ],
                             "text": "🚀 **Build completed successfully!**"
