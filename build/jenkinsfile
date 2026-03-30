@@ -72,7 +72,7 @@ pipeline {
                     nexusUrl: "${env.NEXUSURL_HOST}",
                     groupId: 'hsitapp',
                     version: "${env.PACKAGE_VERSION}",
-                    repository: 'python-release',       // use a PyPI-like repo in Nexus
+                    repository: 'hsit-common',       // use a PyPI-like repo in Nexus
                     credentialsId: 'nexus-creds',
                     artifacts: [
                         [
