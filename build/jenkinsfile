@@ -76,13 +76,13 @@ pipeline {
                     credentialsId: 'nexus-creds',
                     artifacts: [
                         [
-                            artifactId: "",
+                            artifactId: "${env.PACKAGE_NAME}",
                             classifier: '',
                             file: "dist/${env.WHL_FILE}",
                             type: 'whl'
                         ],
                         [
-                            artifactId: "",
+                            artifactId: "${env.PACKAGE_NAME}",
                             classifier: '',
                             file: "dist/${env.TAR_FILE}",
                             type: 'tar.gz'
