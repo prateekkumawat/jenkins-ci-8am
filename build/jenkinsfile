@@ -42,64 +42,6 @@ pipeline {
             }
         }
  
-        stage("PythonBuild"){
-            steps{
-                dir('app/'){
-                  sh '''
-                    #!/bin/bash
-                    set -e
-                    python3 -m venv venv
-                    venv/bin/pip install --upgrade pip setuptools wheel build
-                    venv/bin/python -m build
-                    '''
-
-                    // Dynamically get package name and version
-                    script {
-                        env.PACKAGE_NAME = sh(script: "python3 setup.py --name", returnStdout: true).trim()
-                        env.PACKAGE_VERSION = sh(script: "python3 setup.py --version", returnStdout: true).trim()
-                        def distFiles = sh(script: "ls -1 dist/", returnStdout: true).trim().split("\n")
-                        
-                        // Pick the wheel and tar.gz files
-                        env.WHL_FILE = distFiles.find { it.endsWith(".whl") } ?: ""
-                        env.TAR_FILE = distFiles.find { it.endsWith(".tar.gz") } ?: ""
-                        
-                        echo "Detected Package: ${env.PACKAGE_NAME}, Version: ${env.PACKAGE_VERSION}"
-                        echo "Distfiles WHL: ${env.WHL_FILE}, TAR: ${env.TAR_FILE}"
-                    }
-                }    
-            }
-        }
-
-        stage("Artifacts Upload"){
-            steps{
-                dir('app/'){
-                    nexusArtifactUploader(
-                    nexusVersion: 'nexus3',
-                    protocol: 'http',
-                    nexusUrl: "${env.NEXUSURL_HOST}",
-                    groupId: 'hsitapp',
-                    version: "${env.PACKAGE_VERSION}",
-                    repository: 'hsit-common',       // use a PyPI-like repo in Nexus
-                    credentialsId: 'nexus-creds',
-                    artifacts: [
-                        [
-                            artifactId: "",
-                            classifier: '',
-                            file: 'dist/hsitapp-0.0.1-py3-none-any.whl',
-                            type: 'whl'
-                        ],
-                        [
-                            artifactId: "",
-                            classifier: '',
-                            file: 'dist/hsitapp-0.0.1.tar.gz',
-                            type: 'tar.gz'
-                        ]
-                    ]
-                   )
-                }        
-            }
-        }
-        
         stage("Notification") {
             steps {
                 script {
