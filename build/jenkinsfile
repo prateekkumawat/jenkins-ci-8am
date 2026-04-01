@@ -26,8 +26,8 @@ pipeline {
                 dir('app/'){
                     withSonarQubeEnv('sonar-server') {
                       sh ''' $SCANNER_HOME/bin/sonar-scanner \
-                      -Dsonar.projectName=python-app-project \
-                      -Dsonar.projectKey=python-app-project '''
+                      -Dsonar.projectName=docker-ci-project \
+                      -Dsonar.projectKey=docker-ci-project '''
                     }
                 }     
             }
