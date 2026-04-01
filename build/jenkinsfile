@@ -4,13 +4,11 @@ pipeline {
     }
 
     environment {
-        NEXUSURL_HOST = "98.130.120.83:8081"
         SCANNER_HOME = tool 'sonar-scanner'
         DOCKER_CREDS = credentials('docker-creds')
     }
 
     stages{
-
         stage("Clean WorkSpaace") {
             steps{
               cleanWs()
@@ -19,7 +17,7 @@ pipeline {
 
         stage("AppCode Checkout"){
             steps {
-                git branch:'python-app', url:' https://github.com/prateekkumawat/jenkins-ci-8am.git'
+                git branch:'docker-release', url:' https://github.com/prateekkumawat/jenkins-ci-8am.git'
             }
         }
         
@@ -35,82 +33,30 @@ pipeline {
             }
         }   
 
-        stage("PythonBuild"){
+        stage("Sonar QualityGate"){
             steps{
-                dir('app/'){
-                  sh '''
-                    #!/bin/bash
-                    set -e
-                    python3 -m venv venv
-                    venv/bin/pip install --upgrade pip setuptools wheel build
-                    venv/bin/python -m build
-                    '''
-
-                    // Dynamically get package name and version
-                    script {
-                        env.PACKAGE_NAME = sh(script: "python3 setup.py --name", returnStdout: true).trim()
-                        env.PACKAGE_VERSION = sh(script: "python3 setup.py --version", returnStdout: true).trim()
-                        def distFiles = sh(script: "ls -1 dist/", returnStdout: true).trim().split("\n")
-                        
-                        // Pick the wheel and tar.gz files
-                        env.WHL_FILE = distFiles.find { it.endsWith(".whl") } ?: ""
-                        env.TAR_FILE = distFiles.find { it.endsWith(".tar.gz") } ?: ""
-                        
-                        echo "Detected Package: ${env.PACKAGE_NAME}, Version: ${env.PACKAGE_VERSION}"
-                        echo "Distfiles WHL: ${env.WHL_FILE}, TAR: ${env.TAR_FILE}"
-                    }
-                }    
-            }
-        }
-
-        stage("Artifacts Upload"){
-            steps{
-                dir('app/'){
-                    nexusArtifactUploader(
-                    nexusVersion: 'nexus3',
-                    protocol: 'http',
-                    nexusUrl: "${env.NEXUSURL_HOST}",
-                    groupId: 'hsitapp',
-                    version: "${env.PACKAGE_VERSION}",
-                    repository: 'hsit-common',       // use a PyPI-like repo in Nexus
-                    credentialsId: 'nexus-creds',
-                    artifacts: [
-                        [
-                            artifactId: "${env.PACKAGE_NAME}",
-                            classifier: '',
-                            file: "dist/${env.WHL_FILE}",
-                            type: 'whl'
-                        ],
-                        [
-                            artifactId: "${env.PACKAGE_NAME}",
-                            classifier: '',
-                            file: "dist/${env.TAR_FILE}",
-                            type: 'tar.gz'
-                        ]
-                    ]
-                   )
-                }        
+                script {
+                  waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
+                }
             }
         }
 
         stage("CreateImage"){
             steps{
-                sh 'docker build -t prateekkumawat/pythonapp:v0.0.1 . '
+                sh 'docker build -t prateekkumawat/webapp:0.1.1 . '
             }
         }
 
         stage("push Image"){
           steps {
                sh 'docker login -u $DOCKER_CREDS_USR -p $DOCKER_CREDS_PSW '
-               sh ' docker push prateekkumawat/pythonapp:v0.0.1'
+               sh ' docker push prateekkumawat/webapp:0.1.1 '
             }
         }
-
-        stage("Sonar QualityGate"){
-            steps{
-                script {
-                  waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
-                }
+         
+        stage("Container Create"){
+          steps {
+               sh 'docker compose up -d'
             }
         }
  

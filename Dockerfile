@@ -1,15 +1,5 @@
-# Base Image
-FROM python:3.11-slim
+FROM nginx:latest 
 
-# set working path
-WORKDIR /app
+COPY src/ /usr/share/nginx/html 
 
-COPY app/requirements.txt .
-
-RUN pip install -r requirements.txt
-
-COPY app/  .
- 
-CMD ["python","app.py"]
-
-EXPOSE 5000
+EXPOSE 80 

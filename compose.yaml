@@ -1,0 +1,6 @@
+services:
+  webapp:
+    container_name: ci-webapp
+    image: prateekkumawat/webapp:0.1.1
+    ports:
+    - 8090:80
