@@ -23,7 +23,7 @@ pipeline {
         
         stage("SonarAnalysis"){
             steps{
-                dir('app/'){
+                dir('src/'){
                     withSonarQubeEnv('sonar-server') {
                       sh ''' $SCANNER_HOME/bin/sonar-scanner \
                       -Dsonar.projectName=docker-ci-project \
@@ -46,7 +46,13 @@ pipeline {
                 sh 'docker build -t prateekkumawat/webapp:0.1.1 . '
             }
         }
-
+        
+        stage("Image scan"){
+            step {
+              sh 'trivy image   prateekkumawat/webapp:0.1.1 >> /home/ubuntu/scanreport.txt
+            }
+        }
+        
         stage("push Image"){
           steps {
                sh 'docker login -u $DOCKER_CREDS_USR -p $DOCKER_CREDS_PSW '
