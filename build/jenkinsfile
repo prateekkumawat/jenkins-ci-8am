@@ -48,8 +48,8 @@ pipeline {
         }
         
         stage("Image scan"){
-            step {
-              sh 'trivy image   prateekkumawat/webapp:0.1.1 >> /home/ubuntu/scanreport. '
+            steps{
+              sh 'trivy image   prateekkumawat/webapp:0.1.1 >> /home/ubuntu/scanreport '
             }
         }
 
