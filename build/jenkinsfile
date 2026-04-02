@@ -49,10 +49,10 @@ pipeline {
         
         stage("Image scan"){
             step {
-              sh 'trivy image   prateekkumawat/webapp:0.1.1 >> /home/ubuntu/scanreport.txt
+              sh 'trivy image   prateekkumawat/webapp:0.1.1 >> /home/ubuntu/scanreport. '
             }
         }
-        
+
         stage("push Image"){
           steps {
                sh 'docker login -u $DOCKER_CREDS_USR -p $DOCKER_CREDS_PSW '
