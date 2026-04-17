@@ -5,67 +5,61 @@ pipeline {
 
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
-        DOCKER_CREDS = credentials('docker-creds')
     }
 
     stages{
-        stage("Clean WorkSpaace") {
-            steps{
-              cleanWs()
-            }
-        }
-
+        
         stage("AppCode Checkout"){
             steps {
-                git branch:'docker-release', url:' https://github.com/prateekkumawat/jenkins-ci-8am.git'
+                git branch:'terraform', url:' https://github.com/prateekkumawat/jenkins-ci-8am.git'
             }
         }
         
-        stage("SonarAnalysis"){
-            steps{
-                dir('src/'){
-                    withSonarQubeEnv('sonar-server') {
-                      sh ''' $SCANNER_HOME/bin/sonar-scanner \
-                      -Dsonar.projectName=docker-ci-project \
-                      -Dsonar.projectKey=docker-ci-project '''
-                    }
-                }     
-            }
-        }   
+        // stage("SonarAnalysis"){
+        //     steps{
+        //         dir('src/'){
+        //             withSonarQubeEnv('sonar-server') {
+        //               sh ''' $SCANNER_HOME/bin/sonar-scanner \
+        //               -Dsonar.projectName=docker-ci-project \
+        //               -Dsonar.projectKey=docker-ci-project '''
+        //             }
+        //         }     
+        //     }
+        // }   
 
-        stage("Sonar QualityGate"){
-            steps{
-                script {
-                  waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
-                }
-            }
-        }
+        // stage("Sonar QualityGate"){
+        //     steps{
+        //         script {
+        //           waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
+        //         }
+        //     }
+        // }
 
-        stage("CreateImage"){
+        stage("terraform init"){
             steps{
-                sh 'docker build -t prateekkumawat/webapp:0.1.1 . '
+                dir('terraform/'){
+                  sh 'terraform init -input=false'
+                }  
             }
         }
         
-        stage("Image scan"){
+        stage("terraform plan"){
             steps{
-              sh 'trivy image prateekkumawat/webapp:0.1.1 >> scanreport.txt '
+              dir('terraform/'){  
+                sh 'terraform plan -out=tfplan -input=false'
+              } 
+
             }
         }
 
-        stage("push Image"){
+        stage("terraform apply"){
           steps {
-               sh 'docker login -u $DOCKER_CREDS_USR -p $DOCKER_CREDS_PSW '
-               sh ' docker push prateekkumawat/webapp:0.1.1 '
+              dir('terraform/'){
+                 sh 'terraform apply -input=false tfplan'
+                } 
             }
         }
          
-        stage("Container Create"){
-          steps {
-               sh 'docker-compose up -d'
-            }
-        }
- 
         stage("Notification") {
             steps {
                 script {
