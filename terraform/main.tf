@@ -27,6 +27,27 @@ resource "aws_subnet" "thissubnet2" {
   }
 }
 
+# create subnet3 for vpc 
+resource "aws_subnet" "thissubnet3" {
+  vpc_id = aws_vpc.this1.id
+  cidr_block = var.subnet_cidr[2]
+  availability_zone = var.subnet_az[1]
+  tags = { 
+    Name = "${var.infra_name}-${var.infra_env}-subnet3-az2"
+  }
+}
+
+
+# create subnet4 for vpc 
+resource "aws_subnet" "thissubnet4" {
+  vpc_id = aws_vpc.this1.id
+  cidr_block = var.subnet_cidr[3]
+  availability_zone = var.subnet_az[0]
+  tags = { 
+    Name = "${var.infra_name}-${var.infra_env}-subnet4-az1"
+  }
+}
+
 # create internet gateway 
 resource "aws_internet_gateway" "this1igw" {
   vpc_id = aws_vpc.this1.id
