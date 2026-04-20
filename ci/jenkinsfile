@@ -62,7 +62,7 @@ pipeline {
         stage("Deploy Application"){
             steps{
                 dir('deploy/'){
-                    sh 'docker-compose -f compose.yaml up -d '
+                    sh 'docker-compose -f docker-compose.yaml up -d '
                 }
             }
         }
