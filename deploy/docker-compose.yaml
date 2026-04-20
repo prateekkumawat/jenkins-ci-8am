@@ -1,0 +1,6 @@
+services:
+  webapp: 
+    container_name: webapp
+    image: prateekkumawat/webapp:latest
+    ports:
+      - "8080:80"
